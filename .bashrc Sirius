@@ -252,7 +252,7 @@ function oskar(){
 
     singularity exec --nv --bind $PWD --cleanenv --home $PWD ~/.oskar/OSKAR-2.8.3-Python3.sif $prog $file
 
-    find ~/.oskar -name '*.log' -type f -exec mv "{}" ~/.oskar/output
+    find ~/.oskar -name '*.log' -type f -exec mv "{}" ~/.oskar/output \;
     cd $prevd
     cp -rf ~/.oskar/output $outf
     
