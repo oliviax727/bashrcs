@@ -204,8 +204,6 @@ export PATH=/home/olivia/boost_1_88_0:${PATH}
 
 function oskar(){
 
-    find ~/.oskar -name '*.log' -type f -delete
-
     gflag=0
     prog=""
     file=""
@@ -237,6 +235,10 @@ function oskar(){
                 outf=$2
                 shift
             ;;
+            -c | --clean)
+                find ~/.oskar -name '*.log' -type f -delete
+                return 0
+            ;;
             \?)
                 
             ;;
@@ -252,8 +254,6 @@ function oskar(){
 
     singularity exec --nv --bind $PWD --cleanenv --home $PWD ~/.oskar/OSKAR-2.8.3-Python3.sif $prog $file
 
-    find ~/.oskar -name '*.log' -type f -exec mv "{}" ~/.oskar/output \;
     cd $prevd
     cp -rf ~/.oskar/output $outf
-    
 }
