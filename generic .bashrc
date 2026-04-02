@@ -2,6 +2,12 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
+# ===== PRE-EXECUTION COMMANDS ===== #
+export WARNING='\033[93mWARNING\033[00m'
+PROMPT_COMMAND=':'
+
+# ===== DEFAULT COMMANDS ===== #
+
 # If not running interactively, don't do anything
 case $- in
     *i*) ;;
@@ -25,7 +31,7 @@ shopt -s checkwinsize
 
 # If set, the pattern "**" used in a pathname expansion context will
 # match all files and zero or more directories and subdirectories.
-#shopt -s globstar
+shopt -s globstar
 
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
@@ -84,9 +90,6 @@ if [ -x /usr/bin/dircolors ]; then
     alias egrep='egrep --color=auto'
 fi
 
-# colored GCC warnings and errors
-#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
-
 # some more ls aliases
 alias ll='ls -alF'
 alias la='ls -A'
@@ -116,31 +119,64 @@ if ! shopt -oq posix; then
   fi
 fi
 
-alias jpy='jupyter notebook'
+# ===== ANACONDA SETUP ===== #
 
-# Fun Aliases
-alias penis='echo "CBT also known as Cock and Ball Torture"'
-alias capitalism='echo "More like Crapitalism amirite!"'
-alias reuben='echo "ERRATA"'
-alias cum='echo "Trans Rights are Human Rights"'
-alias ios='echo "iPhone User Moment"'
-alias anarchy='echo "No Gods No Masters!"'
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/olivia/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/olivia/anaconda3/etc/profile.d/conda.sh" ]; then
+        . "/home/olivia/anaconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/olivia/anaconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
 
-export JAVA_HOME=/usr/lib/jvm/java-16-openjdk-amd64
+# ===== CUSTOM COMMANDS - HPC OPTIONS ===== #
 
-# TOMCAT
-alias tomcat_start='sudo systemctl start tomcat'
-alias tomcat_status='sudo systemctl status tomcat'
-alias tomcat_stop='sudo systemctl stop tomcat'
-alias tomcat_restart='sudo systemctl restart tomcat'
+# Quick-Jump/CD
+export software="/software/projects/mwaeor/ohrw"
+export scratch="/scratch/mwaeor/ohrw"
+export home="/home/ohrw"
 
-alias open_tcp='sudo ufw allow 8080/tcp'
+# Uncomment if using default paths is prefered
+export no_TWD=yes
 
-# GCC Compiler Settings
+if [ -n "$no_TWD" ]; then
+	use_TWD=yes
+else
+	use_TWD=
+fi
+
+# Change path variable
+function find_TWD(){
+    if [ -n "$use_TWD" ]; then
+        export CWD="\w"
+    else
+        export ctop="$(echo $PWD | awk -F/ '{print FS $2}' | tr "\/" "\$")"
+        export TWD=$(eval "echo $(echo $PWD | awk -F/ '{print FS $2}' | tr "\/" "\$")")
+        relpath=$(realpath -s --relative-to=$TWD $PWD)
+        export CWD="$(([[ $relpath == '.' ]] && echo "$ctop") || ([[ $relpath =~ '..' ]] && echo "$PWD") || echo "$ctop/$relpath")"
+    fi
+}
+
+PROMPT_COMMAND="${PROMPT_COMMAND}; find_TWD"
+
+unset no_TWD
+
+# ===== CUSTOM COMMANDS - GCC COMPILER ===== #
+
+# colored GCC warnings and errors
+export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 # Run C++ file with g++
 CPPSTARTSTRING='#include <iostream>\n\nint main()\n{\n\tstd::cout << "Hello World" << std::endl;\n\treturn 0;\n}\n'
 
+# Initialise C++ file
 function init-cpp() {
     FNAME=$1
 
@@ -159,85 +195,106 @@ function init-cpp() {
 
 }
 
+# Run C++ file
 function run-cpp() {
     g++ -o "$1.out" "$1.cpp"
     ./"$1.out"
 }
 
+# Debug C++ file
 function debug-cpp() {
     g++ -o "$1.gdb.out" -g "$1.cpp"
     gdb ./"$1.gdb.out"
 }
 
-# TERMINAL QOL
+# ===== CUSTOM COMMANDS - TERMINAL COLOURS ===== #
 
+# Change preset terminal colour
 function terminal_colour(){
-    if [[ $1 == "-bi" ]]; then
-        export PS1='${debian_chroot:+($debian_chrooreset}\[\e[38;2;220;10;120m\]\u@\[\e[38;2;180;100;180m\]\h:\[\e[38;2;75;120;255m\]\w\[\033[01;00m\]\$ '
-    elif [[ $1 == "-trans" ]]; then
-        export PS1='${debian_chroot:+($debian_chrooreset}\[\e[38;2;91;206;250m\]\u\[\e[38;2;245;169;184m\]@\[\e[38;2;255;255;255m\]\h\[\e[38;2;245;169;184m\]:\[\e[38;2;91;206;250m\]\w\[\033[00m\]\$ '
-    elif [[ $1 == "-green" ]]; then
-        export PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-    elif [[ $1 == "-blue" ]]; then
-        export PS1='${debian_chroot:+($debian_chroot)}\[\033[01;36m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-    elif [[ $1 == "-blank" ]]; then
-        export PS1='${debian_chroot:+($debian_chroot)}\[\033[00m\]\u@\h:\w\$ '
-    elif [[ $1 == "-basic" ]]; then
-        export PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-    elif [[ $1 == "-bi-old" ]]; then
-        export PS1='${debian_chroot:+($debian_chrooreset}\[\e[38;2;214;2;112m\]\u@\[\e[38;2;155;79;150m\]\h:\[\e[38;2;0;56;168m\]\w\[\033[01;00m\]\$ '
-    elif [[ $1 == "-ancom" ]]; then
-        export PS1='${debian_chroot:+($debian_chrooreset}\[\e[38;2;255;0;0m\]\u@\h\[\033[01;00m\]:\[\e[38;2;100;100;100m\]\w\[\033[01;00m\]\$ '
+    if [[ $1 == "--help" ]]; then
+        echo "=================================="
+        echo "Change terminal colour. Use --help to see options."
+        echo "=================================="
+        echo "Usage:"
+        echo "terminal_colour|term_col [option]"
+        echo "=================================="
+        echo "Available Colours:"
+        echo "Default:    --basic --blank"
+        echo "Monochrome: --green --blue --yellow"
+        echo "Pride/Id:   --bi --trans --bi-old --ancom"
+        echo "=================================="
+    elif [[ $1 == "--bi" ]]; then
+        export PS1='${debian_chroot:+($debian_chrooreset}\[\e[38;2;220;10;120m\]\u@\[\e[38;2;180;100;180m\]\h:\[\e[38;2;75;120;255m\]'"$CWD"'\[\033[01;00m\]\$ '
+    elif [[ $1 == "--trans" ]]; then
+        export PS1='${debian_chroot:+($debian_chrooreset}\[\e[38;2;91;206;250m\]\u\[\e[38;2;245;169;184m\]@\[\e[38;2;255;255;255m\]\h\[\e[38;2;245;169;184m\]:\[\e[38;2;91;206;250m\]'"$CWD"'\[\033[00m\]\$ '
+    elif [[ $1 == "--green" ]]; then
+        export PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]'"$CWD"'\[\033[00m\]\$ '
+    elif [[ $1 == "--blue" ]]; then
+        export PS1='${debian_chroot:+($debian_chroot)}\[\033[01;36m\]\u@\h\[\033[00m\]:\[\033[01;34m\]'"$CWD"'\[\033[00m\]\$ '
+    elif [[ $1 == "--yellow" ]]; then
+        export PS1='${debian_chroot:+($debian_chroot)}\[\033[01;93m\]\u@\h\[\033[00m\]:\[\033[01;93m\]'"$CWD"'\[\033[00m\]\$ '
+    elif [[ $1 == "--blank" ]]; then
+        export PS1='${debian_chroot:+($debian_chroot)}\[\033[00m\]\u@\h:'"$CWD"'\$ '
+    elif [[ $1 == "--basic" ]]; then
+        export PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]'"$CWD"'\[\033[00m\]\$ '
+    elif [[ $1 == "--bi-old" ]]; then
+        export PS1='${debian_chroot:+($debian_chrooreset}\[\e[38;2;214;2;112m\]\u@\[\e[38;2;155;79;150m\]\h:\[\e[38;2;0;56;168m\]'"$CWD"'\[\033[01;00m\]\$ '
+    elif [[ $1 == "--ancom" ]]; then
+        export PS1='${debian_chroot:+($debian_chrooreset}\[\e[38;2;255;0;0m\]\u@\h\[\033[01;00m\]:\[\e[38;2;100;100;100m\]'"$CWD"'\[\033[01;00m\]\$ '
+    else
+        echo "$1 is not a valid option. Here's the help menu:"
+        terminal_colour --help
     fi
 }
 
 alias term_col="terminal_colour"
-alias restart="reset && source ~/.bashrc && clear"
 
-#Ubuntu Default: term_col -basic
+# ===== CUSTOM COMMANDS - OSKAR ===== #
 
-term_col -trans
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/home/olivia/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/home/olivia/anaconda3/etc/profile.d/conda.sh" ]; then
-        . "/home/olivia/anaconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="/home/olivia/anaconda3/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
-
-export GOPATH=${HOME}/go
-export PATH=/usr/local/go/bin:${PATH}:${GOPATH}/bin
-export GOPATH=${HOME}/go
-export PATH=/usr/local/go/bin:${PATH}:${GOPATH}/bin
-export PATH=/home/olivia/casacore:${PATH}
-export PATH=/home/olivia/boost_1_88_0:${PATH}
-export PATH=/root/.local/bin:${PATH}
-
-export OSKAR_INC_DIR=/home/olivia/.oskar/OSKAR-2.11.1
-export OSKAR_LIB_DIR=/home/olivia/.oskar/OSKAR-2.11.1
-
-
-# OSKAR Basic Command
-
-# OSKAR Basic Command - add to .bashrc
+# OSKAR Generic command
 function oskar_bash() {
-
-    echo "Running custom OSKAR bash command ..."
-
     cflag=0
     gflag=0
+    bflag=0
     prog=""
     ofile=""
-    outf="./"
     prevd=$PWD
+    sifs=(${HOME}/.oskar/*.sif)
+    sfile="${sifs[0]}"
+
+    if [[ ! -d ~/.oskar ]]; then
+        mkdir ~/.oskar
+        printf "$WARNING: OSKAR directory has just been created. This means that there is no existing OSKAR version on this device that can be recognised. Please download a binary or SIF file into ~/.oskar before continuing.\n"
+    fi
+
+    if [[ ! -f sfile ]]; then
+        printf "$WARNING: There does not appear to be any SIF files in the ~/.oskar directory. Please make sure at least one sif file exists in the directory.\n"
+    fi
+
+    if [[ $1 == "--help" || $1 == "-h" ]]; then
+        echo "=================================="
+        echo "Run OSKAR with a custom generic bash command. By default it will run the first singularity image it"
+        echo "finds in ~/.oskar. If there is no singularity image it will throw an error."
+        echo "=================================="
+        echo "Usage:"
+        echo "oskar_bash [(-p|--prog)|(-s|--sif) <exec_file>] "
+        echo "=================================="
+        echo "Options:"
+        echo "-g --global -s --sample: Run OSKAR with sample settings"
+        echo "-l --local:              (Default) Run OSKAR in current directory with custom settings"
+        echo "-i --intif:              Run OSKAR's interferometer simulation"
+        echo "-I --img:                Run OSKAR's dirty imager simulation"
+        echo "-b --beam:               Run OSKAR's beam simulation"
+        echo "-f --file:               Settings file to use"
+        echo "-c --clean:              Clean directory of OSKAR logs"
+        echo "-s --sif:                If running singularity, what sif file to use"
+        echo "-p --prog:               If running a binary or application, the location of the binary or application"
+        echo "=================================="
+
+        return 0
+    fi
+
+    echo "Running custom OSKAR bash command ..."
     
     while [ $# -gt 0 ]; do
         case $1 in
@@ -260,15 +317,21 @@ function oskar_bash() {
                 ofile=$2
                 shift
             ;;
-            -o | --output)
-                outf=$2
-                shift
-            ;;
             -c | --clean)
                 cflag=1
             ;;
+            -s | --sif)
+                sfile=$2
+                bflag=0
+                shift
+            ;;
+            -p | --prog)
+                prog=$2
+                bflag=1
+                shift
+            ;;
             \?)
-                
+                echo "'$1' is not a valid option. Use --help or -h to see what options are available."
             ;;
         esac
         shift
@@ -276,7 +339,7 @@ function oskar_bash() {
 
     if [ $cflag -eq 1 ]; then
         if [ $gflag -eq 1 ]; then
-            find ~/.oskar -name '*.log' -type f -delete
+            find ${HOME}/.oskar -name '*.log' -type f -delete
         else
             find . -name '*.log' -type f -delete
         fi
@@ -286,25 +349,19 @@ function oskar_bash() {
     if [ $gflag -eq 1 ]; then
         ofile="$prog.ini"
 
-        cd ~/.oskar
+        cd ${HOME}/.oskar
     fi
 
-    singularity exec --nv --bind $PWD --cleanenv --home $PWD ~/.oskar/OSKAR-2.8.3-Python3.sif $prog $ofile
+    if [ $bflag -eq 1 ]; then
+        $prog $ofile
+    else
+        singularity exec --nv --bind $PWD --cleanenv --home $PWD $sfile $prog $ofile
+    fi
 
     cd $prevd
 }
 
-# Export hgrep
-alias hgrep="history | grep"
-
-# Created by `pipx` on 2026-02-05 09:15:01
-export PATH="$PATH:/home/olivia/.local/bin"
-
-# GTK Path
-export GTK_PATH=$GTK_PATH:/usr/lib/x86_64-linux-gnu/gtk-2.0/modules
-export GTK_PATH=$GTK_PATH:/usr/lib/x86_64-linux-gnu/gtk-3.0/modules
-export GTK_MODULES=libcanberra-gtk-moduleexport GOPATH=${HOME}/go
-export PATH=/usr/local/go/bin:${PATH}:${GOPATH}/bin
+# ===== CUSTOM COMMANDS - CLEAN PATH ===== #
 
 # Clean Path
 function cleanpath() {
@@ -334,30 +391,16 @@ function cleanpath() {
     export PATH
 }
 
-# GOPATH
-export GOPATH=${HOME}/go
-export PATH=/usr/local/go/bin:${PATH}:${GOPATH}/bin
+# ===== CUSTOM COMMANDS - QUICK SSH===== #
 
-# Breakpoint code
-alias breakpoint='
-    while read -p"Debugging(Ctrl-d to exit)> " debugging_line
-    do
-        eval "$debugging_line"
-    done'
-
-# Setonix
-alias setonix='ssh ohrw@setonix.pawsey.org.au'
-export SETONIX='ohrw@setonix.pawsey.org.au'
-
-# Quick ssh
 function sshcd () { ssh -t $1 "source ~/.bashrc; cd $2; bash --login"; }
 
 function qssh() {
-    if [[ -f "~/.config/qssh-list.txt" ]]; then
-        touch "~/.config/qssh-list.txt"
+    if [[ ! -f ~/.config/qssh-list.txt ]]; then
+        touch ~/.config/qssh-list.txt
     fi
 
-    if [[ $1 == "--help" ]]; then
+    if [[ $1 == "help" ]]; then
         echo "=================================="
         echo "Connect to a predefined ssh server."
         echo "=================================="
@@ -401,7 +444,75 @@ function qssh() {
     fi
 }
 
+# ===== BASIC ALIAS COMMANDS ===== #
+
+# Jupyter Notebook
+alias jpy='jupyter notebook'
+
+# Restart
+alias restart="reset && source ~/.bashrc && clear"
+
+# History Search
+alias hgrep="history | grep"
+
+# Fun Aliases
+alias penis='echo "CBT also known as Cock and Ball Torture"'
+alias capitalism='echo "More like Crapitalism amirite!"'
+alias reuben='echo "ERRATA"'
+alias cum='echo "Trans Rights are Human Rights"'
+alias ios='echo "iPhone User Moment"'
+alias anarchy='echo "No Gods No Masters!"'
+
+# Tomcat
+alias tomcat_start='sudo systemctl start tomcat'
+alias tomcat_status='sudo systemctl status tomcat'
+alias tomcat_stop='sudo systemctl stop tomcat'
+alias tomcat_restart='sudo systemctl restart tomcat'
+
+alias open_tcp='sudo ufw allow 8080/tcp'
+
+# Breakpoint code
+alias breakpoint='
+    while read -p"Debugging(Ctrl-d to exit)> " debugging_line
+    do
+        eval "$debugging_line"
+    done'
+
+# Setonix
+alias setonix='ssh ohrw@setonix.pawsey.org.au'
+export SETONIX='ohrw@setonix.pawsey.org.au'
+
+# EXPAND ALL ALIASES
+shopt -s expand_aliases
+
+# Java SDK
+export JAVA_HOME=/usr/lib/jvm/java-16-openjdk-amd64
+
+# Go Path
+export GOPATH=${HOME}/go
+export PATH=/usr/local/go/bin:${PATH}:${GOPATH}/bin
+
+# Casacore and boost paths
+export PATH=/home/olivia/casacore:${PATH}
+export PATH=/home/olivia/boost_1_88_0:${PATH}
+export PATH=/root/.local/bin:${PATH}
+
+# OSKAR GUI Path
+export OSKAR_INC_DIR=/home/olivia/.oskar/OSKAR-2.11.1
+export OSKAR_LIB_DIR=/home/olivia/.oskar/OSKAR-2.11.1
+
+# Pipx Path
+export PATH="$PATH:/home/olivia/.local/bin"
+
+# GTK Path
+export GTK_PATH=$GTK_PATH:/usr/lib/x86_64-linux-gnu/gtk-2.0/modules
+export GTK_PATH=$GTK_PATH:/usr/lib/x86_64-linux-gnu/gtk-3.0/modules
+export GTK_MODULES=libcanberra-gtk-moduleexport GOPATH=${HOME}/go
+export PATH=/usr/local/go/bin:${PATH}:${GOPATH}/bin
+
+# ===== EXIT EXECUTION ===== #
+
+#Ubuntu Default: terminal_colour --basic
+terminal_colour --trans
 
 cleanpath
-
-
