@@ -1,3 +1,6 @@
+# shellcheck shell=bash
+
+# Program reader
 alias ss="ps -aux"
 
 # Some useful aliases.
