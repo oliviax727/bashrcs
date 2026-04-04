@@ -13,11 +13,11 @@ function oskar_bash() {
 
     if [[ ! -d ~/.oskar ]]; then
         mkdir ~/.oskar
-        printf "$WARNING: OSKAR directory has just been created. This means that there is no existing OSKAR version on this device that can be recognised. Please download a binary or SIF file into ~/.oskar before continuing.\n"
+        printf "${WARNING_TEXT}: OSKAR directory has just been created. This means that there is no existing OSKAR version on this device that can be recognised. Please download a binary or SIF file into ~/.oskar before continuing.\n"
     fi
 
     if [[ ! -f sfile ]]; then
-        printf "$WARNING: There does not appear to be any SIF files in the ~/.oskar directory. Please make sure at least one sif file exists in the directory.\n"
+        printf "${WARNING_TEXT}: There does not appear to be any SIF files in the ~/.oskar directory. Please make sure at least one sif file exists in the directory.\n"
     fi
 
     if [[ $1 == "--help" || $1 == "-h" ]]; then

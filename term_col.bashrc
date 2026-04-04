@@ -3,7 +3,7 @@
 # Change preset terminal colour
 function terminal_colour(){
 
-    find_TWD
+    set_CWD
 
     if [[ $1 == "--help" ]]; then
         echo "=================================="

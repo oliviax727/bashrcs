@@ -4,4 +4,4 @@ export scratch="/scratch/mwaeor/ohrw"
 export home="/home/ohrw"
 
 # Uncomment if using default paths is prefered
-export no_TWD=yes
+export force_set_TWD=yes

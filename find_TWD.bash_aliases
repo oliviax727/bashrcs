@@ -1,14 +1,14 @@
 # ===== CUSTOM COMMANDS - HPC OPTIONS ===== #
 
-if [ -n "$no_TWD" ]; then
-	use_TWD=
+if [ "$force_set_TWD" == "yes" ]; then
+	set_TWD=yes
 else
-	use_TWD=yes
+	set_TWD=
 fi
 
 # Change path variable
-function find_TWD(){
-    if [ -z "$use_TWD" ]; then
+function set_CWD(){
+    if [ -z "$set_TWD" ]; then
         export CWD="\w"
     else
         export ctop="$(echo $PWD | awk -F/ '{print FS $2}' | tr "\/" "\$")"
@@ -18,6 +18,6 @@ function find_TWD(){
     fi
 }
 
-PROMPT_COMMAND="${PROMPT_COMMAND}; find_TWD"
+PROMPT_COMMAND="${PROMPT_COMMAND}; set_TWD"
 
-unset no_TWD
+unset force_use_TWD
