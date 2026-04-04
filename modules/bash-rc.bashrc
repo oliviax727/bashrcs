@@ -31,6 +31,11 @@ bash-rc() {
         :
     }
 
+    # Publishes a testing module function
+    function publish() {
+        :
+    }
+
     exec $1
 
 }
