@@ -1,1 +1,0 @@
-# ===== BASH-RC PACKAGE MODULES ===== #
