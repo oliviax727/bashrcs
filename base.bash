@@ -13,7 +13,7 @@ export BASHRC_PATH="${HOME}/Desktop/Fun/bash-rc"
 # ===== CHECK PROFILES ===== #
 export device_name=$(hostnamectl | egrep -i "Static hostname" | awk '{print $NF}' || hostname)
 
-if [ ! -z $BASHRC_TEST_MODE ] then
+if [ ! -z $BASHRC_TEST_MODE ]; then
     device_name="test"
 fi
 

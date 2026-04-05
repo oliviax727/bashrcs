@@ -20,12 +20,12 @@ bash-rc() {
 
     # Purges archives
     function purge() {
-        cd-run $BASHRC_PATH 
+        cd-run '' $BASHRC_PATH 
     }
 
     # Enter testing mode profile
     function test() {
-        cd-run 'env -i bash HOME=$HOME BASHRC_TEST_MODE=1 --noprofile --rcfile "./base.bash"' $BASHRC_PATH
+        cd-run 'env -i HOME=$HOME BASHRC_TEST_MODE=1 bash --noprofile --rcfile "./base.bash"' $BASHRC_PATH
     }
 
     # Publishes a testing module function
