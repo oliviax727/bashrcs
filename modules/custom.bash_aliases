@@ -4,10 +4,10 @@
 alias jpy='jupyter notebook'
 
 # Restart
-alias restart="reset && source ~/.bashrc && clear"
+alias restart='reset && source ~/.bashrc && clear'
 
 # History Search
-alias hgrep="history | grep"
+alias hgrep='history | grep'
 
 # Tomcat
 alias tomcat_start='sudo systemctl start tomcat'
@@ -25,4 +25,23 @@ alias breakpoint='
     done'
 
 # One-Way Diff
-alias diff-diode="diff $1 $2 |grep '^<'|awk '{print $2}')"
+function diff-diode() {
+
+    diff $1 $2 | grep '^<' | cut -c 3-
+
+}
+
+# CD Run
+function cd-run() {
+
+    local pwd_save=$PWD
+
+    cd $1
+
+    eval $2
+
+    cd $pwd_save
+}
+
+# Filename format friendly time
+alias filename-date="date '+%F-%H%M-%Z'"

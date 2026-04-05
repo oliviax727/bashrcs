@@ -4,53 +4,80 @@ bash-rc() {
 
     # Load repository from upstream
     function update() {
-        :
+        cd-run $BASHRC_PATH "(git fetch && git reset --hard origin/main) >/dev/null"
     }
 
     # Checkout different branch in bash-rc file
     function checkout() {
-        :
+        update
+        cd-run $BASHRC_PATH "(git fetch && git switch $1) >/dev/null"
 
     }
 
     # Archives current .bashrc from home directory
     function archive() {
-        :
+        cp "${HOME}/.bashrc" "${HOME}/archive-$(filename-date).bashrc"
     }
 
     # Purges archives
     function purge() {
-        :
+        cd-run $BASHRC_PATH 
     }
 
     # Enter testing mode profile
     function test() {
-        :
+        while read -p"Debugging(Ctrl-d to exit)> " debugging_line
+        do
+            eval "$debugging_line"
+        done
     }
 
     # Publishes a testing module function
     function publish() {
-        :
+
+        local file=("${BASHRC_PATH}/test/test_$1.*")
+        file="${file[0]}"
+        filename=$(basename $file)
+        local extension="${filename##*.}"
+        
+        case $1 in
+            enter|exit)
+                cat $file >> "${BASHRC_PATH}/modules/$1.bash"
+            ;;
+            rc|alias)  
+                cp $file "${BASHRC_PATH}/modules/$2.${extension}"
+            ;;
+            profile)
+                cp $file "${BASHRC_PATH}/profiles/$2.${extension}"
+            ;;
+            \?)
+                echo "'$1' is not a valid option. Use \`bash-rc (--help|-h)\` to see what options are available."
+            ;;
+        esac
     }
 
     # Load repository base.bash file as bashrc
     function build() {
+
         shift
+
         while [ $# -gt 0 ]; do
+
             archive_flag=1
-            extra=""
+            append_flag=0
+
             case $1 in
-                -k)
+                -f)
                     archive_flag=0
                 ;;
-                -f)
-                    extra=$(diff "${BASHRC_PATH}/base.bash" "~/.bashrc")
+                -k)
+                    append_flag=1
                 ;;
                 -p)
                     cd-run "${BASHRC_PATH}" "git pull"
                 ;;
                 \?)
-                    echo "'$1' is not a valid option. Use --help or -h to see what options are available."
+                    echo "'$1' is not a valid option. Use \`bash-rc (--help|-h)\` to see what options are available."
                 ;;
             esac
             shift
@@ -60,9 +87,27 @@ bash-rc() {
             archive
         fi
 
-        cp "${BASHRC_PATH}/base.bash" "~/.bashrc"
+        cp "${HOME}/.bashrc" "${HOME}/.bashrc_temp"
 
-        printf "\n${extra}\n"
+        cp "${BASHRC_PATH}/base.bash" "${HOME}/.bashrc"
+
+        if [ append_flag -eq 1 ]; then
+            diff-diode "${BASHRC_PATH}/base.bash" "${HOME}/.bashrc_temp" >> "~/.bashrc"
+        fi
+
+        rm "~/.bashrc_temp"
+    }
+
+    function set-path() {
+
+        local repo_name=$(basename -s .git `git config --get remote.origin.url`)
+        local error_text="${ERROR_TEXT}: The path you wish to set as the bashrc directory does not contain the correct .git files."
+        local check_string="export BASHRC_PATH"
+        local replace_string="export BASHRC_PATH=$1"
+
+        sed -i "s/^${check_string}.*/${replace_string}/" "~/.bashrc"
+
+        [ repo_name -eq "bashrcs" ] && export BASHRC_PATH=$1 || printf $error_text
     }
 
     # Help
@@ -83,7 +128,7 @@ bash-rc() {
         echo " "
         echo "bash-rc test"
         echo " "
-        echo "bash-rc publish (enter|exit|alias|rc) <name>"
+        echo "bash-rc publish (enter|exit|alias <module_name>|rc <module_name>|profile <profile_name>)"
         echo " "
         echo "=================================="
         echo "Commands:"
