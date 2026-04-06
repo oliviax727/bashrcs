@@ -75,3 +75,4 @@ profile_exit
 
 # Clean variable space
 unset profile_substrings alias_files bashrc_files
+
