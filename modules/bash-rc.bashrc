@@ -194,13 +194,14 @@ function bash-rc() {
             export BASHRC_PATH="${set_path}"
             echo -e "${INFORMATION_TEXT}: Updating \$BASHRC_PATH to ${BASHRC_PATH}/bash-rc ..."
             bash-rc-change-path "${set_path}" "${HOME}/.bashrc"
-        if [ -d "${clone_parent_dir}/bash-rc" ]; then
+        elif [ -d "${clone_parent_dir}/bash-rc" ]; then
             export BASHRC_PATH="${set_path}/bash-rc"
             echo -e "${INFORMATION_TEXT}: Updating \$BASHRC_PATH to ${BASHRC_PATH}/bash-rc ..."
             bash-rc-change-path "${set_path}" "${HOME}/bash-rc/.bashrc"
         else
             return 1
         fi
+        
     }
 
     # Help
