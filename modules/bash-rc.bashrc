@@ -192,6 +192,9 @@ function bash-rc() {
         if [ $? -eq 0 ]; then
             export BASHRC_PATH="${set_path}"
             bash-rc-change-path "${set_path}" "${HOME}/.bashrc"
+        if [ ! -d "${clone_parent_dir}/bash-rc" ]; then
+            export BASHRC_PATH="${set_path}/bash-rc"
+            bash-rc-change-path "${set_path}" "${HOME}/bash-rc/.bashrc"
         else
             return 1
         fi
