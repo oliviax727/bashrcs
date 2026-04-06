@@ -2,15 +2,59 @@
 
 function bash-rc() {
 
+    function bash-rc-check-path() {
+
+        local check_path=$([ -z $1 ] && echo "$BASHRC_PATH" || echo "$(realpath -sm $1)")
+        local repo_name=$(cd-run "${check_path}" 'basename -s ".git" `git config --get remote.origin.url`')
+
+        if [ ! -d "$check_path" ] || [[ ! "${repo_name}" == 'bash-rc' ]]; then
+            echo -e "${ERROR_TEXT}: chosen \$BASHRC_PATH points to a directory (${check_path}) that does not exist"
+            echo "or is not a clone of the bash-rc git repository."
+            printf "%s" "Clone bash-rc repository into directory and reset BASHRC_PATH? (y/[n]): " 
+            read confirm
+
+            if [ ! -z "$confirm" || "$confirm" -eq y ]; then
+                bash-rc-clone "$check_path"
+                echo -e "${INFORMATION_TEXT}: Updating \$BASHRC_PATH to ${BASHRC_PATH}/bash-rc ..."
+                bash-rc-set-path "${check_path}/bash-rc"
+            else
+                echo 'Please make sure to change the BASHRC_PATH to a working git clone using `bash-rc set-path`.'
+            fi
+
+            return 1
+        fi
+
+        return 0
+    }
+
+    # Replace the bashrc or base file's BASHRC_PATH variable setting
+    function bash-rc-change-path-rc() {
+        local check_string='export BASHRC_PATH='
+        local replace_string=$(echo "export BASHRC_PATH=\"$1\"" | sed 's/\//\\\//g')
+        sed -i "s/^${check_string}.*/${replace_string}/" $2
+    }
+
     # Load repository from upstream
     function bash-rc-update() {
-        cd-run $BASHRC_PATH "(git fetch && git reset --hard origin/main) >/dev/null"
+        cd-run "$BASHRC_PATH" "(git fetch && git reset --hard origin/main) >/dev/null"
     }
 
     # Checkout different branch in bash-rc file
     function bash-rc-checkout() {
         bash-rc-update
-        cd-run $BASHRC_PATH "git switch $1 >/dev/null"
+        cd-run "$BASHRC_PATH" "git switch $1 >/dev/null"
+    }
+
+    # Clone repository in chosen directory
+    function bash-rc-clone() {
+        local check_string='export BASHRC_PATH='
+        local replace_string='export BASHRC_PATH='
+
+        cd-run "$([ -z $1 ] && echo '.' || echo "$1")" '
+        git clone git@github.com:oliviax727/bash-rc.git
+        || git clone https://github.com/oliviax727/bash-rc.git
+        || echo "${ERROR_TEXT}: Something went wrong when trying to clone the repo."
+        || bash-rc-change-path-rc "$PWD" "./bash-rc/base.bash"'
     }
 
     # Archives current .bashrc from home directory
@@ -18,15 +62,10 @@ function bash-rc() {
         cp "${HOME}/.bashrc" "${BASHRC_PATH}/archive/archive-$(filename-date).bashrc"
     }
 
-    # Purges archives
-    function bash-rc-purge() {
-        rm "${BASHRC_PATH}/archive"
-    }
-
     # Enter testing mode profile
     function bash-rc-test() {
         export BASHRC_TEST_MODE=1
-        cd-run $BASHRC_PATH 'bash --noprofile --rcfile "./base.bash"'
+        cd-run "$BASHRC_PATH" 'bash --noprofile --rcfile "./base.bash"'
         export BASHRC_TEST_MODE=0
         exec bash
     }
@@ -36,21 +75,22 @@ function bash-rc() {
 
         local file=("${BASHRC_PATH}/test/test_$1.*")
         file="${file[0]}"
-        filename=$(basename $file)
+        filename=$(basename "$file")
         local extension="${filename##*.}"
         
         case $1 in
             enter|exit)
-                cat $file >> "${BASHRC_PATH}/modules/$1.bash"
+                cat "$file" >> "${BASHRC_PATH}/modules/$1.bash"
             ;;
             rc|alias)  
-                cp $file "${BASHRC_PATH}/modules/$2.${extension}"
+                cp "$file" "${BASHRC_PATH}/modules/$2.${extension}"
             ;;
             profile)
-                cp $file "${BASHRC_PATH}/profiles/$2.${extension}"
+                cp "$file" "${BASHRC_PATH}/profiles/$2.${extension}"
             ;;
             \?)
-                echo "'$1' is not a valid option. Use \`bash-rc (--help|-h)\` to see what options are available."
+                echo "'$1' is not a valid option. Use \`bash-rc help\` or \`bash-rc-help\` to see"
+                echo "what options are available."
             ;;
         esac
     }
@@ -71,11 +111,11 @@ function bash-rc() {
                     append_flag=1
                 ;;
                 -p)
-                    update
+                    bash-rc-update
                 ;;
                 -c)
                     shift
-                    checkout $1
+                    bash-rc-checkout $1
                 ;;
                 \?)
                     echo "'$1' is not a valid option. Use \`bash-rc (--help|-h)\` to see what options are available."
@@ -84,37 +124,50 @@ function bash-rc() {
             shift
         done
 
-        if [ $archive_flag -eq 1 ]; then
-            archive
+        if [ "$archive_flag" -eq 1 ]; then
+            bash-rc-archive
         fi
 
         cp "${HOME}/.bashrc" "${HOME}/.bashrc_temp"
 
         cp "${BASHRC_PATH}/base.bash" "${HOME}/.bashrc"
 
-        if [ $append_flag -eq 1 ]; then
+        if [ "$append_flag" -eq 1 ]; then
             diff-diode "${BASHRC_PATH}/base.bash" "${HOME}/.bashrc_temp" >> "~/.bashrc"
         fi
 
         rm "${HOME}/.bashrc_temp"
 
-        local echo_statement='echo "EXEC_BASE"'
-        local replace_string='echo "EXEC_BASHRC"'
-        sed -i "s/^${echo_statement}.*/${replace_string}/" "${HOME}/.bashrc"
-
-        restart
     }
 
+    # Purges archives
+    function bash-rc-purge() {
+
+        if [ -d "${BASHRC_PATH}/archive" ]; then
+            if [ "${BASHRC_PATH}/archive" ]; then
+                rm $BASHRC_PATH/archive/*
+            else
+                echo -e "${INFORMATION_TEXT}: Archive directory is empty!"
+            fi
+        else
+            echo -e "${WARNING_TEXT}: Archive directory does not exist! Creating a new one ..."
+            mkdir "${BASHRC_PATH}/archive"
+        fi
+    }
+
+    # Set a new BASHRC_PATH variable
     function bash-rc-set-path() {
+        local set_path="$(realpath -sm $1)"
 
-        local repo_name=$(basename -s .git `git config --get remote.origin.url`)
-        local error_text="${ERROR_TEXT}: The path you wish to set as the bashrc directory does not contain the correct .git files."
-        local check_string="export BASHRC_PATH"
-        local replace_string="export BASHRC_PATH=$1"
+        bash-rc-check-path "${set_path}"
 
-        sed -i "s/^${check_string}.*/${replace_string}/" "~/.bashrc"
-
-        [ repo_name -eq "bashrcs" ] && export BASHRC_PATH=$1 || printf $error_text
+        if [ $? -eq 0 ]; then
+            export BASHRC_PATH="${set_path}"
+            bash-rc-change-path-rc "${set_path}" "${HOME}/.bashrc"
+        else
+            return 1
+        fi
+        
     }
 
     # Help
@@ -137,6 +190,10 @@ function bash-rc() {
         echo " "
         echo "bash-rc publish (enter|exit|alias <module_name>|rc <module_name>|profile <profile_name>)"
         echo " "
+        echo "bash-rc check-path [<path_to_repo>]"
+        echo " "
+        echo "bash-rc set-path <path_to_repo>"
+        echo " "
         echo "=================================="
         echo "Commands:"
         echo "build                Update the bashrc"
@@ -146,6 +203,8 @@ function bash-rc() {
         echo "purge                Remove all archived bashrcs"
         echo "test                 Run the testing account environment"
         echo "publish              Publish the current testing module"
+        echo "check-path           Check if current BASHRC_PATH is working"
+        echo "set-path             Set a new BASHRC_PATH"
         echo "help                 Access the help menu"
         echo "=================================="
         echo "Options:"
@@ -154,11 +213,26 @@ function bash-rc() {
         echo "-p                   Force pull from github remote"
         echo "-c                   Checkout branch from git remote"
         echo "=================================="
+        echo "Notes:"
+        echo "Hyphenating the first argument instead of using space (e.g. bash-rc-test instead of bash-rc test)"
+        echo "will also call the desired function."
+        echo "=================================="
     }
 
+    # Execute command
     local sel_cmd=$1
     shift
 
-    eval '"bash-rc-$sel_cmd" $@'
+    local error_text="${ERROR_TEXT}: Command doesn't exist. Use \`bash-rc help\` or \`bash-rc-help\` to see what commands exist"
 
+    if [ "$(type -t "bash-rc-$sel_cmd")" == "function" ]; then
+        eval '"bash-rc-$sel_cmd" $@'
+    else
+        echo -e "$error_text"
+        return 1
+    fi
+
+    unset -f bash-rc-change-path-rc
 }
+
+bash-rc check-path

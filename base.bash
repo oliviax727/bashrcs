@@ -2,9 +2,6 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
-echo "EXEC_BASE"
-echo "BASHRC_TEST_MODE=${BASHRC_TEST_MODE}"
-
 # ===== ENTER ===== #
 
 # Define the path to this repository
