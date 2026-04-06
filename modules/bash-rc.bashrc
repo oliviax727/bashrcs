@@ -23,6 +23,8 @@ function bash-rc() {
         if [ ! "${repo_name}" == 'bash-rc' ]; then
             [ $check_null -eq 1 ] && return 0
 
+            bash-rc-check-path -n "${check_path}/bash-rc" && return 0
+
             echo -e "${ERROR_TEXT}: chosen \$BASHRC_PATH points to a directory (${check_path}) that does not exist"
             echo "or is not a clone of the bash-rc git repository."
             printf "%s" "Clone bash-rc repository into directory and reset BASHRC_PATH? (y/[n]): " 
@@ -32,7 +34,6 @@ function bash-rc() {
                 bash-rc-clone "${check_path}"
 
                 if [ $? -eq 0 ]; then
-                    echo -e "${INFORMATION_TEXT}: Updating \$BASHRC_PATH to ${BASHRC_PATH}/bash-rc ..."
                     bash-rc-set-path "${check_path}/bash-rc"
                 fi
 
@@ -73,7 +74,7 @@ function bash-rc() {
 
         bash-rc-check-path -n "${clone_parent_dir}"
 
-        if [ $? -eq 0 ] && [ ! -d "${clone_parent_dir}/bash-rc" ]; then
+        if [ $? -eq 0 ]; then
             cd-run  "${clone_parent_dir}" '
             (git clone git@github.com:oliviax727/bash-rc.git
             || git clone https://github.com/oliviax727/bash-rc.git)
@@ -191,14 +192,15 @@ function bash-rc() {
 
         if [ $? -eq 0 ]; then
             export BASHRC_PATH="${set_path}"
+            echo -e "${INFORMATION_TEXT}: Updating \$BASHRC_PATH to ${BASHRC_PATH}/bash-rc ..."
             bash-rc-change-path "${set_path}" "${HOME}/.bashrc"
-        if [ ! -d "${clone_parent_dir}/bash-rc" ]; then
+        if [ -d "${clone_parent_dir}/bash-rc" ]; then
             export BASHRC_PATH="${set_path}/bash-rc"
+            echo -e "${INFORMATION_TEXT}: Updating \$BASHRC_PATH to ${BASHRC_PATH}/bash-rc ..."
             bash-rc-change-path "${set_path}" "${HOME}/bash-rc/.bashrc"
         else
             return 1
         fi
-        
     }
 
     # Help
