@@ -4,19 +4,38 @@ function bash-rc() {
 
     function bash-rc-check-path() {
 
-        local check_path=$([ -z $1 ] && echo "$BASHRC_PATH" || echo "$(realpath -sm $1)")
-        local repo_name=$(cd-run "${check_path}" 'basename -s ".git" `git config --get remote.origin.url`')
+        local check_null=0
 
-        if [ ! -d "$check_path" ] || [[ ! "${repo_name}" == 'bash-rc' ]]; then
+        if [ "$1" == '-n' ]; then
+            check_null=1
+            shift
+        fi
+
+        local check_path=$([ -z $1 ] && echo "$BASHRC_PATH" || echo "$(realpath -sm $1)")
+
+        local repo_string='[ -d "$check_path" ]
+            && [ "$(git rev-parse --is-inside-work-tree 2> /dev/null)" == true ]
+            && basename -s ".git" `git config --get remote.origin.url`
+            || echo "error"'
+
+        local repo_name=$(cd-run "${check_path}" "$repo_string")
+
+        if [ ! "${repo_name}" == 'bash-rc' ]; then
+            [ $check_null -eq 1 ] && return 0
+
             echo -e "${ERROR_TEXT}: chosen \$BASHRC_PATH points to a directory (${check_path}) that does not exist"
             echo "or is not a clone of the bash-rc git repository."
             printf "%s" "Clone bash-rc repository into directory and reset BASHRC_PATH? (y/[n]): " 
             read confirm
 
-            if [ ! -z "$confirm" || "$confirm" -eq y ]; then
-                bash-rc-clone "$check_path"
-                echo -e "${INFORMATION_TEXT}: Updating \$BASHRC_PATH to ${BASHRC_PATH}/bash-rc ..."
-                bash-rc-set-path "${check_path}/bash-rc"
+            if [ "$confirm" == 'y' ]; then
+                bash-rc-clone "${check_path}"
+
+                if [ $? -eq 0 ]; then
+                    echo -e "${INFORMATION_TEXT}: Updating \$BASHRC_PATH to ${BASHRC_PATH}/bash-rc ..."
+                    bash-rc-set-path "${check_path}/bash-rc"
+                fi
+
             else
                 echo 'Please make sure to change the BASHRC_PATH to a working git clone using `bash-rc set-path`.'
             fi
@@ -24,11 +43,11 @@ function bash-rc() {
             return 1
         fi
 
-        return 0
+        return $check_null
     }
 
     # Replace the bashrc or base file's BASHRC_PATH variable setting
-    function bash-rc-change-path-rc() {
+    function bash-rc-change-path() {
         local check_string='export BASHRC_PATH='
         local replace_string=$(echo "export BASHRC_PATH=\"$1\"" | sed 's/\//\\\//g')
         sed -i "s/^${check_string}.*/${replace_string}/" $2
@@ -50,11 +69,20 @@ function bash-rc() {
         local check_string='export BASHRC_PATH='
         local replace_string='export BASHRC_PATH='
 
-        cd-run "$([ -z $1 ] && echo '.' || echo "$1")" '
-        git clone git@github.com:oliviax727/bash-rc.git
-        || git clone https://github.com/oliviax727/bash-rc.git
-        || echo "${ERROR_TEXT}: Something went wrong when trying to clone the repo."
-        || bash-rc-change-path-rc "$PWD" "./bash-rc/base.bash"'
+        local clone_parent_dir="$([ -z $1 ] && echo '.' || echo "$(realpath -sm $1)")"
+
+        bash-rc-check-path -n "${clone_parent_dir}"
+
+        if [ $? -eq 0 ] && [ ! -d "${clone_parent_dir}/bash-rc" ]; then
+            cd-run  "${clone_parent_dir}" '
+            (git clone git@github.com:oliviax727/bash-rc.git
+            || git clone https://github.com/oliviax727/bash-rc.git)
+            && bash-rc-change-path "$clone_parent_dir" "./bash-rc/base.bash"
+            || (echo -e "${ERROR_TEXT}: Something went wrong when trying to clone the repo."
+            && return 1)'
+        else
+            echo -e "${ERROR_TEXT}: Repository or directory already exists here!"
+        fi
     }
 
     # Archives current .bashrc from home directory
@@ -163,7 +191,7 @@ function bash-rc() {
 
         if [ $? -eq 0 ]; then
             export BASHRC_PATH="${set_path}"
-            bash-rc-change-path-rc "${set_path}" "${HOME}/.bashrc"
+            bash-rc-change-path "${set_path}" "${HOME}/.bashrc"
         else
             return 1
         fi
@@ -190,9 +218,11 @@ function bash-rc() {
         echo " "
         echo "bash-rc publish (enter|exit|alias <module_name>|rc <module_name>|profile <profile_name>)"
         echo " "
-        echo "bash-rc check-path [<path_to_repo>]"
+        echo "bash-rc check-path [-n] [<path_to_repo>]"
         echo " "
         echo "bash-rc set-path <path_to_repo>"
+        echo " "
+        echo "bash-rc change-path <path_to_repo> <rc_file>"
         echo " "
         echo "=================================="
         echo "Commands:"
@@ -205,6 +235,7 @@ function bash-rc() {
         echo "publish              Publish the current testing module"
         echo "check-path           Check if current BASHRC_PATH is working"
         echo "set-path             Set a new BASHRC_PATH"
+        echo "change-path          Change the BASHRC_PATH export within a specific file"
         echo "help                 Access the help menu"
         echo "=================================="
         echo "Options:"
@@ -231,8 +262,6 @@ function bash-rc() {
         echo -e "$error_text"
         return 1
     fi
-
-    unset -f bash-rc-change-path-rc
 }
 
 bash-rc check-path
