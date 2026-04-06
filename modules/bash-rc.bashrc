@@ -26,9 +26,9 @@ bash-rc() {
     # Enter testing mode profile
     function test() {
         export BASHRC_TEST_MODE=1
-        cd-run 'bash --login --noprofile --rcfile "./base.bash"' $BASHRC_PATH
+        cd-run 'bash --noprofile --rcfile "./base.bash"' $BASHRC_PATH
         export BASHRC_TEST_MODE=
-        restart
+        exec bash
     }
 
     # Publishes a testing module function
