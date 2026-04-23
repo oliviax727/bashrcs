@@ -1,15 +1,11 @@
 # ===== CUSTOM COMMANDS - OSKAR ===== #
 
-export INFORMATION_TEXT='\033[1;34mINFORMATION\033[00m'
-export WARNING_TEXT='\033[1;33mWARNING\033[00m'
-export ERROR_TEXT='\033[1;31mERROR\033[00m'
-
 # OSKAR Generic command
 function oskar_bash() {
     local exes=""
     local cflag=0
     local gflag=1
-    local bflag=0
+    local bflag=1
     local prog=""
     local ofile=""
 
@@ -44,12 +40,12 @@ function oskar_bash() {
                 gflag=1
             ;;
             -l | --local)
-                exes="$2/bin"
+                exes=$(realpath "$2/bin")
                 gflag=0
                 shift
             ;;
             -s | --sif)
-                exes=$2
+                exes=$(realpath "$2")
                 bflag=0
                 shift
             ;;
@@ -63,7 +59,7 @@ function oskar_bash() {
                 prog="oskar_imager"
             ;;
             -f | --file)
-                ofile=$2
+                ofile=$(realpath "$2")
                 shift
             ;;
             -c | --clean)
@@ -77,9 +73,9 @@ function oskar_bash() {
     done
     
     # Check if files exist
-    if [[ $bflag -eq 1 && $gflag -eq 1 && ! type "$prog" > /dev/null ]]; then
+    if [[ $bflag -eq 1 && $gflag -eq 1 ]] && ! type "$prog" > /dev/null; then
         printf "${ERROR_TEXT}: A CLI OSKAR applet/command on this system does not exist.\n"
-    elif [[ $bflag -eq 1 && $gflag -eq 0  && ! type "$exes/$prog" > /dev/null ]]; then
+    elif [[ $bflag -eq 1 && $gflag -eq 0 ]] && ! type "$exes/$prog" > /dev/null; then
         printf "${ERROR_TEXT}: There is no $prog executable file in $exes or the directory does not exist.\n"
     elif [[ $bflag -eq 0 && ! -f $exes ]]; then
         printf "${ERROR_TEXT}: There does not appear to be any OSKAR SIF files in the given directory.\n"
@@ -93,7 +89,7 @@ function oskar_bash() {
     if [[ $bflag -eq 1 && $gflag -eq 1 ]]; then
         $prog $ofile
     elif [[ $bflag -eq 1 && $gflag -eq 0 ]]; then
-        "$exec/$prog" $ofile
+        "$exes/$prog" $ofile
     else
         singularity exec --nv --bind $PWD --cleanenv --home $PWD $sfile $prog $ofile
     fi
