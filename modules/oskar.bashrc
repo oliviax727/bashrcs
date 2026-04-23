@@ -3,7 +3,7 @@
 # OSKAR Generic command
 function oskar_bash() {
     local cflag=0
-    local gflag=0
+    local gflag=1
     local bflag=0
     local prog=""
     local ofile=""
@@ -87,18 +87,11 @@ function oskar_bash() {
     done
 
     if [ $cflag -eq 1 ]; then
-        if [ $gflag -eq 1 ]; then
-            find ${HOME}/.oskar -name '*.log' -type f -delete
-        else
-            find . -name '*.log' -type f -delete
-        fi
-        return 0
+        find . -name '*.log' -type f -delete
     fi
 
-    if [ $gflag -eq 1 ]; then
-        ofile="$prog.ini"
-
-        cd ${HOME}/.oskar
+    if [ $gflag -eq 0 ]; then
+        prog="${HOME}/.oskar/bin/${prog}"
     fi
 
     if [ $bflag -eq 1 ]; then
