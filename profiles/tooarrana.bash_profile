@@ -14,7 +14,11 @@ profile_enter() {
 
 profile_alias() { :; }
 
-profile_rc() { :; }
+profile_rc() {
+    export GSL_INC="/fred/oz113/owalters/gsl-2.8/include"
+    export GSL_LIB="/fred/oz113/owalters/gsl-2.8/lib"
+    export LD_LIBRARY_PATH="/fred/oz113/owalters/gsl-2.8/lib:$LD_LIBRARY_PATH"
+}
 
 profile_exit() {
     terminal_colour --anfem
