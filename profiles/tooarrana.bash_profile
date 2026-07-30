@@ -2,7 +2,7 @@
 
 profile_enter() {
     # Quick-Jump/CD
-    export software="/fred/oz113/owalters"
+    export fred="/fred/oz113/owalters"
 
     export QUICK_JUMP_VARS="fred"
 
