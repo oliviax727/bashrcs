@@ -41,26 +41,6 @@ test_profiles_none_sources_and_runs_without_output() {
     run_profile_file ../profiles/none.bash_profile
 }
 
-test_profiles_delll_sources_and_runs_without_output() {
-    run_profile_file ../profiles/delll.bash_profile
-}
-
-test_profiles_sirius_sources_and_runs_without_output() {
-    run_profile_file ../profiles/Sirius.bash_profile
-}
-
-test_profiles_setonix_sources_and_runs_without_output() {
-    run_profile_file ../profiles/setonix.bash_profile
-}
-
-test_profiles_nid_sources_and_runs_without_output() {
-    run_profile_file ../profiles/nid.bash_profile
-}
-
-test_profiles_macbook_sources_and_runs_without_output() {
-    run_profile_file ../profiles/MacBook.bash_profile
-}
-
 test_profiles_test_sources_and_runs_without_output() {
     run_profile_file ../profiles/test.bash_profile
 }

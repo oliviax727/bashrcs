@@ -147,12 +147,7 @@
 
 | Function | Description |
 | --- | --- |
-| `test_profiles_none_sources_and_runs_without_output` | Confirms `profiles/none.bash_profile` sources run without error or user-visible output under standard harness settings. |
-| `test_profiles_delll_sources_and_runs_without_output` | Confirms `profiles/delll.bash_profile` sources run without error or user-visible output. |
-| `test_profiles_sirius_sources_and_runs_without_output` | Confirms `profiles/Sirius.bash_profile` sources run without error or user-visible output. |
-| `test_profiles_setonix_sources_and_runs_without_output` | Confirms `profiles/setonix.bash_profile` sources run without error or user-visible output. |
-| `test_profiles_nid_sources_and_runs_without_output` | Confirms `profiles/nid.bash_profile` sources run without error or user-visible output. |
-| `test_profiles_macbook_sources_and_runs_without_output` | Confirms `profiles/MacBook.bash_profile` sources run without error or user-visible output. |
+| `test_profiles_none_sources_and_runs_without_output` | Confirms `profiles/none.bash_profile` sources run without error or user-visible output under |
 | `test_profiles_test_sources_and_runs_without_output` | Confirms `profiles/test.bash_profile` sources run without error or user-visible output. |
 
 

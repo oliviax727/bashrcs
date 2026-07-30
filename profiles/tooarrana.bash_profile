@@ -4,7 +4,7 @@ profile_enter() {
     # Quick-Jump/CD
     export software="/fred/oz113/owalters"
 
-    export QUICK_JUMP_VARS="sfred"
+    export QUICK_JUMP_VARS="fred"
 
     # Uncomment if using default paths is prefered
     export force_set_TWD=yes
@@ -17,5 +17,5 @@ profile_alias() { :; }
 profile_rc() { :; }
 
 profile_exit() {
-    terminal_colour --ancom
+    terminal_colour --anfem
 }
