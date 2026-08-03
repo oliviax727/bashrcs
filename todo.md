@@ -2,25 +2,25 @@
 
 ## Quick SSH
 
-[ ] Secure copy multiple files/globs
-[ ] Relative sub-directories with @ symbol (e.g. `qsc setonix:home@./.config`)
+- [ ] Secure copy multiple files/globs
+- [ ] Relative sub-directories with @ symbol (e.g. `qsc setonix:home@./.config`)
 
 ## Other RC-file integration
 
-[ ] `.pylintrc`
-[ ] `.shellcheckrc`
-[ ] ESLint and Babel config
+- [ ] `.pylintrc`
+- [ ] `.shellcheckrc`
+- [ ] ESLint and Babel config
 
 ## Terminal Colour
 
-[ ] Lesbian pride colours
-[ ] Non-Binary pride colours
-[ ] Transfemme pride colours
-[ ] Communist flag colours
-[ ] Queer anarchism flag colours
-[ ] Black and white colours
+- [ ] Lesbian pride colours
+- [ ] Non-Binary pride colours
+- [ ] Transfem pride colours
+- [ ] Communist flag colours
+- [ ] Queer anarchism flag colours
+- [ ] Black and white colours
 
 ## Repository-Wide
 
-[ ] Clean up unneeded unit tests
-[ ] Publish as proper package
+- [ ] Clean up unneeded unit tests
+- [ ] Publish as proper package
